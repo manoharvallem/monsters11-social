@@ -1,0 +1,33 @@
+name: Deploy Flask App to GCP VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: SSH and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: SSH into GCP and Deploy
+        run: |
+          ssh ${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_IP }} <<EOF
+            cd monsters11-social
+            git pull origin main
+            docker stop \$(docker ps -q)
+            docker rm \$(docker ps -aq)
+            docker build -t monsters11-social .
+            docker run -d -p 80:5000 monsters11-social
+          EOF
