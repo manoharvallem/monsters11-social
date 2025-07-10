@@ -9,7 +9,6 @@ venv/
 .venv/
 .idea/
 *.log
-# Ignore Terraform local directories
 .terraform/
 *.tfstate
 *.tfstate.backup
